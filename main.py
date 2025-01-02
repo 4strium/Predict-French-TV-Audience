@@ -9,9 +9,9 @@ df['Téléspectateurs (en millions)'] = df['Téléspectateurs (en millions)'].as
 df["Part d'audience (en %)"] = df["Part d'audience (en %)"].astype(float)
 df['Date de diffusion'] = pandas.to_datetime(df['Date de diffusion'], format='%d/%m/%Y')
 df['Jour'] = df['Date de diffusion'].dt.day_name()
-df['Nationalité'] = df['Nationalité'].replace('DE', 'Allemagne')
-df['Nationalité'] = df['Nationalité'].replace('CH', 'Suisse')
-df['Nationalité'] = df['Nationalité'].replace('CA', 'Canada')
+df['Nationalité'] = df['Nationalité'].str.replace('DE', 'Allemagne', regex=False)
+df['Nationalité'] = df['Nationalité'].str.replace('CH', 'Suisse', regex=False)
+df['Nationalité'] = df['Nationalité'].str.replace('CA', 'Canada', regex=False)
 
 vacances_scolaires = [
     # Année 2023

@@ -199,13 +199,3 @@ def est_vacances(date):
 df['Vacances scolaires'] = df['Date de diffusion'].apply(est_vacances)
 
 df.to_csv('database_fine.csv', index=False)
-
-print(df.head())
-
-print(df.loc[df['Téléspectateurs (en millions)'].idxmax()])
-
-max_france2 = df[df['Chaîne'] == 'France 2']['Téléspectateurs (en millions)'].max()
-print(df.loc[df['Téléspectateurs (en millions)'] == max_france2])
-
-max_france3 = df[df['Chaîne'] == 'France 3']['Téléspectateurs (en millions)'].max()
-print(df.loc[df['Téléspectateurs (en millions)'] == max_france3])

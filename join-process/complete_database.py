@@ -1,7 +1,7 @@
 import pandas
 
-df_data = pandas.read_csv('database_fine.csv')
-df_ratings = pandas.read_csv('title.ratings.tsv', sep='\t')
+df_data = pandas.read_csv('clean-process/database_fine.csv')
+df_ratings = pandas.read_csv('data-init/title.ratings.tsv', sep='\t')
 
 df_data['IMDB - Note moyenne'] = df_data['IMDB ID'].map(df_ratings.set_index('tconst')['averageRating'])
 df_data['IMDB - Nombre de votes'] = df_data['IMDB ID'].map(df_ratings.set_index('tconst')['numVotes'])

@@ -106,11 +106,11 @@ new_data = pd.DataFrame([
         'IMDB - Nombre de votes': 21357,
         'Année de sortie': 2024,
         'Année de diffusion': 2025,
-        'Jour': 'Saturday',
-        'Mois': 4,
+        'Jour': 'Sunday',
+        'Mois': 12,
         'Vacances scolaires': 'oui',
         'Week-end': 1,
-        'Saison': 2
+        'Saison': 1
     },
     # L'amour ouf
     {
@@ -122,11 +122,11 @@ new_data = pd.DataFrame([
         'IMDB - Nombre de votes': 2385,
         'Année de sortie': 2024,
         'Année de diffusion': 2025,
-        'Jour': 'Wednesday',
-        'Mois': 12,
-        'Vacances scolaires': 'oui',
-        'Week-end': 0,
-        'Saison': 1
+        'Jour': 'Sunday',
+        'Mois': 6,
+        'Vacances scolaires': 'non',
+        'Week-end': 1,
+        'Saison': 3
     },
     # Un p'tit truc en plus
     {
@@ -138,9 +138,25 @@ new_data = pd.DataFrame([
         'IMDB - Nombre de votes': 3870,
         'Année de sortie': 2024,
         'Année de diffusion': 2025,
-        'Jour': 'Saturday',
-        'Mois': 9,
-        'Vacances scolaires': 'non',
+        'Jour': 'Friday',
+        'Mois': 5,
+        'Vacances scolaires': 'oui',
+        'Week-end': 0,
+        'Saison': 2
+    },
+    # Monsieur Aznavour
+    {
+        'Chaîne': 'TF1',
+        'Genres': 'Biography,Drama,Music',
+        'Nationalité': 'FRANCE',
+        'Durée (en min.)': 133,
+        'IMDB - Note moyenne': 7.4,
+        'IMDB - Nombre de votes': 1281,
+        'Année de sortie': 2024,
+        'Année de diffusion': 2025,
+        'Jour': 'Sunday',
+        'Mois': 8,
+        'Vacances scolaires': 'oui',
         'Week-end': 1,
         'Saison': 3
     }
@@ -174,6 +190,7 @@ new_data_final = np.hstack([new_data_scaled, new_data_encoded.toarray(), new_dat
 new_predictions = model.predict(new_data_final)
 
 # Affichage des résultats
-print("Prédiction pour le Comte de Monte Cristo diffusé sur M6 un samedi soir d'avril 2025 pendant les vacances :", new_predictions[0], "millions de téléspectateurs.")
+print("Prédiction pour le Comte de Monte Cristo diffusé sur M6 un vendredi soir d'avril 2025 pendant les vacances :", new_predictions[0], "millions de téléspectateurs.")
 print("Prédiction pour l'Amour OUF diffusé sur France 2 un mercredi soir de décembre 2025 pendant les vacances :", new_predictions[1], "millions de téléspectateurs.")
-print("Prédiction pour un p'tit truc en plus diffusé sur M6 un samedi soir de septembre 2025 hors vacances :", new_predictions[2], "millions de téléspectateurs.")
+print("Prédiction pour un p'tit truc en plus diffusé sur M6 un dimanche soir de septembre 2025 hors vacances :", new_predictions[2], "millions de téléspectateurs.")
+print("Prédiction pour monsieur Aznavour diffusé sur TF1 un dimanche soir de novembre 2025 hors vacances :", new_predictions[3], "millions de téléspectateurs.")

@@ -112,10 +112,7 @@ Prédiction pour [Film] diffusé sur [Chaîne] un [Jour] soir de [Mois] [Année]
 ### 8. Video
 A explanatory video in french is available, just click on the picture below.
 
-
-<p align="center" href="test.fr">
-  <img width="80%" src="https://github.com/4strium/Predict-French-TV-Audience/blob/main/minia-youtube.png?raw=true" alt="Miniature youtube">
-</p>
+[![](https://github.com/4strium/Predict-French-TV-Audience/blob/main/minia-youtube.png?raw=true)](https://youtu.be/i2TmYKWIhKE) 
 
 ### 9. Sources
 - [**CNC/Médiamétrie**](https://www.cnc.fr/-/statistiques-par-secteur-open-dat-1) : Previous known viewership

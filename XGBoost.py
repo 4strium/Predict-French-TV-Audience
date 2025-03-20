@@ -103,6 +103,8 @@ plt.xticks(range(len(importances)), feature_names[indices], rotation=90)
 plt.tight_layout()
 #plt.show()
 
+print(sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True))
+
 # Prédire de nouvelles données
 new_data = pd.DataFrame([
     # Le comte de Monte Cristo
@@ -116,10 +118,10 @@ new_data = pd.DataFrame([
         'Année de sortie': 2024,
         'Année de diffusion': 2025,
         'Jour': 'Sunday',
-        'Mois': 12,
-        'Vacances scolaires': 'oui',
+        'Mois': 10,
+        'Vacances scolaires': 'non',
         'Week-end': 1,
-        'Saison': 1
+        'Saison': 4
     },
     # L'amour ouf
     {
@@ -131,11 +133,11 @@ new_data = pd.DataFrame([
         'IMDB - Nombre de votes': 2385,
         'Année de sortie': 2024,
         'Année de diffusion': 2025,
-        'Jour': 'Sunday',
-        'Mois': 6,
-        'Vacances scolaires': 'non',
+        'Jour': 'Wednesday',
+        'Mois': 12,
+        'Vacances scolaires': 'oui',
         'Week-end': 1,
-        'Saison': 3
+        'Saison': 1
     },
     # Un p'tit truc en plus
     {
@@ -177,13 +179,11 @@ new_data['Genres'] = new_data['Genres'].apply(lambda x: x.split(','))
 # Séparer les nationalités par des slash
 new_data['Nationalité'] = new_data['Nationalité'].apply(lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else [])
 
-# Encoder les nouvelles données (exemple d'utilisation des encodeurs et scalers)
+# Encoder les nouvelles données
 new_data_encoded = encoder.transform(new_data[['Chaîne', 'Jour']])
-
-# Encodage de la colonne "Vacances scolaires"
 new_data['Vacances scolaires'] = vacances_encoder.transform(new_data['Vacances scolaires'])
 
-# Normalisation des données numériques
+# Normaliser les données numériques
 new_data_scaled = scaler.transform(new_data[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
 
 # Encoder les genres avec MultiLabelBinarizer
@@ -199,7 +199,7 @@ new_data_final = np.hstack([new_data_scaled, new_data_encoded.toarray(), new_dat
 new_predictions = model.predict(new_data_final)
 
 # Affichage des résultats
-print("Prédiction pour le Comte de Monte Cristo diffusé sur M6 un vendredi soir d'avril 2025 pendant les vacances :", new_predictions[0], "millions de téléspectateurs.")
+print("Prédiction pour le Comte de Monte Cristo diffusé sur M6 un dimanche soir de décembre 2025 pendant les vacances :", new_predictions[0], "millions de téléspectateurs.")
 print("Prédiction pour l'Amour OUF diffusé sur France 2 un mercredi soir de décembre 2025 pendant les vacances :", new_predictions[1], "millions de téléspectateurs.")
-print("Prédiction pour un p'tit truc en plus diffusé sur M6 un dimanche soir de septembre 2025 hors vacances :", new_predictions[2], "millions de téléspectateurs.")
-print("Prédiction pour monsieur Aznavour diffusé sur TF1 un dimanche soir de novembre 2025 hors vacances :", new_predictions[3], "millions de téléspectateurs.")
+print("Prédiction pour un p'tit truc en plus diffusé sur M6 un vendredi soir de mai 2025 pendant les vacances :", new_predictions[2], "millions de téléspectateurs.")
+print("Prédiction pour monsieur Aznavour diffusé sur TF1 un dimanche soir d'août 2025 pendant les vacances :", new_predictions[3], "millions de téléspectateurs.")

@@ -1,7 +1,7 @@
 <h1 align="center">Predict French TV Audience</h1>
 
 <p align="center">
-  <img width="80%" src="https://github.com/4strium/Cristal-Home-Assistant/blob/main/minia.png?raw=true" alt="Miniature project">
+  <img width="80%" src="https://github.com/4strium/Predict-French-TV-Audience/blob/main/minia.png?raw=true" alt="Miniature project">
 </p>
 
 ## Predicting TV Viewership 
@@ -63,9 +63,9 @@ The dataset should include columns such as:
 
 |Name|Link to the code| RMSE (millions) | R² Score |
 |:---:|:---:| :---: | :---: |
-|XGBoost||0.516|0.96|
-|Random Forest||0.537|0.95|
-|K-Nearest Neighbors||1.506|0.64|
+|XGBoost|[Here](https://github.com/4strium/Predict-French-TV-Audience/blob/main/XGBoost.py)|0.516|0.96|
+|Random Forest|[Here](https://github.com/4strium/Predict-French-TV-Audience/blob/main/random_forest_regressor.py)|0.537|0.95|
+|K-Nearest Neighbors|[Here](https://github.com/4strium/Predict-French-TV-Audience/blob/main/KNN.py)|1.506|0.64|
    
 5. **Making Predictions**
    - The script includes sample data for four movies airing in 2025.
@@ -114,7 +114,7 @@ A explanatory video in french is available, just click on the picture below.
 
 
 <p align="center" href="test.fr">
-  <img width="80%" src="https://github.com/4strium/Cristal-Home-Assistant/blob/main/minia-youtube.png?raw=true" alt="Miniature youtube">
+  <img width="80%" src="https://github.com/4strium/Predict-French-TV-Audience/blob/main/minia-youtube.png?raw=true" alt="Miniature youtube">
 </p>
 
 ### 9. Sources

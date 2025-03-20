@@ -6,7 +6,7 @@
 
 ## Predicting TV Viewership 
 
-This project utilizes various regressive algorithms to predict film viewership based on various features such as channel, genre, nationality, duration, IMDb ratings, airing date, and other relevant factors.
+This project utilizes various regressive algorithms to predict film viewership based on diverse features such as channel, genre, nationality, duration, IMDb ratings, airing date, and other relevant factors.
 
 ### 1. Requirements
 
@@ -118,5 +118,5 @@ A explanatory video in french is available, just click on the picture below.
 </p>
 
 ### 9. Sources
-- CNC/Médiamétrie : Previous known viewership
-- IMDb : Data on films
+- [**CNC/Médiamétrie**](https://www.cnc.fr/-/statistiques-par-secteur-open-dat-1) : Previous known viewership
+- [**IMDb**](https://www.imdb.com/) : Data on films

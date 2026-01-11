@@ -39,7 +39,7 @@ national_df = pd.DataFrame(nationalite_encoded, columns=mlb_nationalite.classes_
 features = ['Chaîne', 'Genres', 'Nationalité', 'Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Jour', 'Mois', 'Année de diffusion', 'Vacances scolaires', 'Week-end', 'Saison']
 target = 'Téléspectateurs (en millions)'
 
-X = data[features]
+X = data[features].copy()
 y = data[target]
 
 # Encoder les variables catégoriques

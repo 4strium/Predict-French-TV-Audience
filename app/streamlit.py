@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder, MultiLabelBinarizer
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Affichage 
 st.title("Audience Prediction")
@@ -48,32 +50,46 @@ target = 'Téléspectateurs (en millions)'
 X = data[features].copy()
 y = data[target]
 
-# Encoder les variables catégoriques
-encoder = OneHotEncoder()
-X_encoded = encoder.fit_transform(X[['Chaîne', 'Jour']])
+with st.empty():
+  st.write("🧠 Training in progress...")
+  # Encoder les variables catégoriques
+  encoder = OneHotEncoder()
+  X_encoded = encoder.fit_transform(X[['Chaîne', 'Jour']])
 
-# Normaliser les colonnes numériques
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
+  # Normaliser les colonnes numériques
+  scaler = StandardScaler()
+  X_scaled = scaler.fit_transform(X[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
 
-# Convertir "Vacances scolaires" en variable binaire
-vacances_encoder = LabelEncoder()
-X['Vacances scolaires'] = vacances_encoder.fit_transform(X['Vacances scolaires'])
+  # Convertir "Vacances scolaires" en variable binaire
+  vacances_encoder = LabelEncoder()
+  X['Vacances scolaires'] = vacances_encoder.fit_transform(X['Vacances scolaires'])
 
-# Combiner toutes les features
-X_final = np.hstack([X_scaled, X_encoded.toarray(), X[['Vacances scolaires']].values, genres_df.values, national_df.values])
+  # Combiner toutes les features
+  X_final = np.hstack([X_scaled, X_encoded.toarray(), X[['Vacances scolaires']].values, genres_df.values, national_df.values])
 
-# 3. Séparer en jeux d'entraînement et de test
-X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
+  # 3. Séparer en jeux d'entraînement et de test
+  X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
 
-# 4. Modélisation
-model = xgboost.XGBRegressor(max_depth=3, subsample=0.91, tree_method='hist', seed=42, n_estimators=30, learning_rate=0.32)
-model.fit(X_train, y_train)
+  # 4. Modélisation
+  model = xgboost.XGBRegressor(max_depth=3, subsample=0.91, tree_method='hist', seed=42, n_estimators=30, learning_rate=0.32)
+  model.fit(X_train, y_train)
+  st.write(":material/check: Model trained !")
 
 # 5. Évaluer le modèle
 y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 
+st.subheader("Model infos :")
 st.write("Erreur quadratique moyenne :", rmse)
 st.write("R2 Score :",  r2_score(y_test, y_pred))
+
+# Garder uniquement les colonnes numériques
+numeric_data = data.select_dtypes(include=['number'])
+
+# Calculer la corrélation
+correlation_matrix = numeric_data.corr()
+fig, ax = plt.subplots(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', ax=ax)
+ax.set_title("Matrice de corrélation")
+st.pyplot(fig)

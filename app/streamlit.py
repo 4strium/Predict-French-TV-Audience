@@ -91,7 +91,7 @@ channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "F
 date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
 
 # Prédire avec le modèle
-def predict():
+if st.button("Predict !") : 
   akas_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}/akas").json()
   title_france = next((aka["text"] for aka in akas_json["akas"] if aka["country"]["code"] == "FR"), None)
 
@@ -145,5 +145,3 @@ def predict():
   st.subheader("Model prediction for your film :")
   prediction = float(model.predict(input_data_final)[0])
   st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion.strftime('%d/%m/%Y')} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")
-
-st.button("Predict !", on_click=predict)

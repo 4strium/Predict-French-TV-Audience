@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 1. Charger les données
-data = pd.read_csv("database_final.csv")
+data = pd.read_csv("database.csv")
 
 # 2. Prétraitement
 data['Date de diffusion'] = pd.to_datetime(data['Date de diffusion'])

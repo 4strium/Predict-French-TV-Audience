@@ -51,30 +51,60 @@ target = 'Téléspectateurs (en millions)'
 X = data[features].copy()
 y = data[target]
 
-with st.empty():
-  st.write("🧠 Training in progress...")
-  # Encoder les variables catégoriques
+@st.cache_resource
+def train_model(data):
+  # preprocessing + entraînement
   encoder = OneHotEncoder()
-  X_encoded = encoder.fit_transform(X[['Chaîne', 'Jour']])
-
-  # Normaliser les colonnes numériques
   scaler = StandardScaler()
-  X_scaled = scaler.fit_transform(X[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
-
-  # Convertir "Vacances scolaires" en variable binaire
   vacances_encoder = LabelEncoder()
+
+  X = data[features].copy()
+  y = data[target]
+
+  X_encoded = encoder.fit_transform(X[['Chaîne', 'Jour']])
+  X_scaled = scaler.fit_transform(X[['Durée (en min.)',
+                                      'IMDB - Note moyenne',
+                                      'IMDB - Nombre de votes',
+                                      'Année de sortie',
+                                      'Année de diffusion',
+                                      'Mois',
+                                      'Week-end',
+                                      'Saison']])
+
   X['Vacances scolaires'] = vacances_encoder.fit_transform(X['Vacances scolaires'])
 
-  # Combiner toutes les features
-  X_final = np.hstack([X_scaled, X_encoded.toarray(), X[['Vacances scolaires']].values, genres_df.values, national_df.values])
+  X_final = np.hstack([
+      X_scaled,
+      X_encoded.toarray(),
+      X[['Vacances scolaires']].values,
+      genres_df.values,
+      national_df.values
+  ])
 
-  # 3. Séparer en jeux d'entraînement et de test
-  X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
+  X_train, X_test, y_train, y_test = train_test_split(
+      X_final, y, test_size=0.2, random_state=42
+  )
 
-  # 4. Modélisation
-  model = xgboost.XGBRegressor(max_depth=3, subsample=0.91, tree_method='hist', seed=42, n_estimators=30, learning_rate=0.32)
+  model = xgboost.XGBRegressor(
+      max_depth=3, subsample=0.91, tree_method='hist',
+      seed=42, n_estimators=30, learning_rate=0.32
+  )
   model.fit(X_train, y_train)
-  st.write(":material/check: Model trained !")
+
+  return model, encoder, scaler, vacances_encoder, X_test, y_test
+
+if "model" not in st.session_state:
+  with st.spinner("🧠 Training model..."):
+    (st.session_state.model,
+      st.session_state.encoder,
+      st.session_state.scaler,
+      st.session_state.vacances_encoder,
+      X_test, y_test) = train_model(data)
+    
+model = st.session_state.model
+encoder = st.session_state.encoder
+scaler = st.session_state.scaler
+vacances_encoder = st.session_state.vacances_encoder
 
 # 5. Évaluer le modèle
 y_pred = model.predict(X_test)
@@ -86,12 +116,15 @@ st.write("Erreur quadratique moyenne :", rmse)
 st.write("R2 Score :",  r2_score(y_test, y_pred))
 
 st.subheader("Predict your film :")
-imdb_id = st.text_input("IMDB Film ID (ttxxxxx)", max_chars=14)
-channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
-date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
+with st.form("prediction_form"):
+  imdb_id = st.text_input("IMDB Film ID (ttxxxxx)", max_chars=14)
+  channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
+  date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
+
+  submitted = st.form_submit_button("Predict !")
 
 # Prédire avec le modèle
-if st.button("Predict !") : 
+if submitted:
   akas_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}/akas").json()
   title_france = next((aka["text"] for aka in akas_json["akas"] if aka["country"]["code"] == "FR"), None)
 
@@ -143,6 +176,8 @@ if st.button("Predict !") :
   # Combiner toutes les features des nouvelles données
   input_data_final = np.hstack([input_data_scaled, input_data_encoded.toarray(), input_data[['Vacances scolaires']].values, genres_encoded, nationalite_encoded])
   st.subheader("Model prediction for your film :")
-  st.image(all_data_json['primaryImage']['url'], width=300)
+  left_co, cent_co, last_co = st.columns(3)
+  with cent_co:
+    st.image(all_data_json['primaryImage']['url'], width=150)
   prediction = float(model.predict(input_data_final)[0])
   st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion.strftime('%d/%m/%Y')} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")

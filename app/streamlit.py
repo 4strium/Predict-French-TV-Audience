@@ -93,3 +93,55 @@ fig, ax = plt.subplots(figsize=(10, 8))
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', ax=ax)
 ax.set_title("Matrice de corrélation")
 st.pyplot(fig)
+
+st.subheader("Predict your film :")
+imdb_id = st.text_input("IMDB Film ID (ttxxxxx)")
+channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
+date_diffusion = st.date_input("Broadcast date")
+
+film_to_predict = {
+  'TITRE' : "TEST",
+  'Chaîne': str(channel),
+  'Genres': 'Action,Adventure,Drama',
+  'Nationalité': 'FRANCE',
+  'Durée (en min.)': 178,
+  'IMDB - Note moyenne': 7.7,
+  'IMDB - Nombre de votes': 21357,
+  'Année de sortie': 2024,
+  'Année de diffusion': date_diffusion.year,
+  'Jour': pd.Timestamp(date_diffusion).day_name(),
+  'Mois': date_diffusion.month,
+  'Vacances scolaires': 'non',
+  'Week-end': 1 if pd.Timestamp(date_diffusion).day_name() in ['Saturday', 'Sunday'] else 0,
+  'Saison': (date_diffusion.month % 12 // 3 + 1)
+}
+
+
+input_data = pd.DataFrame([film_to_predict])
+# Séparer les genres pour appliquer l'encodage MultiLabelBinarizer
+input_data['Genres'] = input_data['Genres'].apply(lambda x: x.split(','))
+
+# Séparer les nationalités par des slash
+input_data['Nationalité'] = input_data['Nationalité'].apply(lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else [])
+
+# Encoder les nouvelles données
+input_data_encoded = encoder.transform(input_data[['Chaîne', 'Jour']])
+input_data['Vacances scolaires'] = vacances_encoder.transform(input_data['Vacances scolaires'])
+
+# Normaliser les données numériques
+input_data_scaled = scaler.transform(input_data[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
+
+# Encoder les genres avec MultiLabelBinarizer
+genres_encoded = mlb.transform(input_data['Genres'])
+
+# Encoder les nationalités
+nationalite_encoded = mlb_nationalite.transform(input_data['Nationalité'])
+
+# Combiner toutes les features des nouvelles données
+input_data_final = np.hstack([input_data_scaled, input_data_encoded.toarray(), input_data[['Vacances scolaires']].values, genres_encoded, nationalite_encoded])
+
+# Prédire avec le modèle
+if st.button("Predict !") : 
+
+  st.subheader("Model prediction for your film :")
+  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion} peut espérer une audience de {model.predict(input_data_final)[0]} millions de téléspectateurs.")

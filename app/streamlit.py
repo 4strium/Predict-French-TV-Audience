@@ -99,7 +99,7 @@ if "model" not in st.session_state:
       st.session_state.encoder,
       st.session_state.scaler,
       st.session_state.vacances_encoder,
-      X_test, y_test) = train_model(data)
+      st.session_state.X_test, st.session_state.y_test) = train_model(data)
     
 model = st.session_state.model
 encoder = st.session_state.encoder
@@ -107,13 +107,13 @@ scaler = st.session_state.scaler
 vacances_encoder = st.session_state.vacances_encoder
 
 # 5. Évaluer le modèle
-y_pred = model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
+y_pred = model.predict(st.session_state.X_test)
+mse = mean_squared_error(st.session_state.y_test, y_pred)
 rmse = np.sqrt(mse)
 
 st.subheader("Model infos :")
 st.write("Erreur quadratique moyenne :", rmse)
-st.write("R2 Score :",  r2_score(y_test, y_pred))
+st.write("R2 Score :",  r2_score(st.session_state.y_test, y_pred))
 
 st.subheader("Predict your film :")
 with st.form("prediction_form"):

@@ -144,4 +144,4 @@ if st.button("Predict !") :
   input_data_final = np.hstack([input_data_scaled, input_data_encoded.toarray(), input_data[['Vacances scolaires']].values, genres_encoded, nationalite_encoded])
   st.subheader("Model prediction for your film :")
   prediction = float(model.predict(input_data_final)[0])
-  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")
+  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion.strftime('%d/%m/%Y')} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")

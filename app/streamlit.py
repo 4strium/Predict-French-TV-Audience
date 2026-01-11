@@ -104,7 +104,7 @@ date_diffusion = st.date_input("Broadcast date")
 
 # Prédire avec le modèle
 if st.button("Predict !") : 
-  akas_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}/akas").json()["akas"]
+  akas_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}/akas").json()
   title_france = next((aka["text"] for aka in akas_json["akas"] if aka["country"]["code"] == "FR"), None)
 
   all_data_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}").json()

@@ -86,9 +86,9 @@ st.write("Erreur quadratique moyenne :", rmse)
 st.write("R2 Score :",  r2_score(y_test, y_pred))
 
 st.subheader("Predict your film :")
-imdb_id = st.text_input("IMDB Film ID (ttxxxxx)")
+imdb_id = st.text_input("IMDB Film ID (ttxxxxx)", max_chars=14)
 channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
-date_diffusion = st.date_input("Broadcast date")
+date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
 
 # Prédire avec le modèle
 if st.button("Predict !") : 

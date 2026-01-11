@@ -109,6 +109,7 @@ if st.button("Predict !") :
 
   all_data_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}").json()
   runtime_minutes = all_data_json['runtimeSeconds'] // 60
+  country = all_data_json['originCountries'][0]['name']
   genres = ','.join(all_data_json['genres'])
   average_rating = all_data_json['rating']['aggregateRating']
   num_votes = all_data_json['rating']['voteCount']
@@ -118,6 +119,7 @@ if st.button("Predict !") :
     'TITRE' : title_france,
     'Chaîne': channel,
     'Genres': genres,
+    'Nationalité': country,
     'Durée (en min.)': runtime_minutes,
     'IMDB - Note moyenne': float(average_rating),
     'IMDB - Nombre de votes': int(num_votes),

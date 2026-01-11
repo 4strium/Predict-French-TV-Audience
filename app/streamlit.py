@@ -5,14 +5,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder, MultiLabelBinarizer
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from vacances_scolaires_france import SchoolHolidayDates
 import datetime
 import requests
 
 # Affichage 
-st.title("Audience Prediction")
+st.title("French TV Audience Prediction")
 
 @st.cache_data
 def load_data():
@@ -87,16 +85,6 @@ st.subheader("Model infos :")
 st.write("Erreur quadratique moyenne :", rmse)
 st.write("R2 Score :",  r2_score(y_test, y_pred))
 
-# Garder uniquement les colonnes numériques
-numeric_data = data.select_dtypes(include=['number'])
-
-# Calculer la corrélation
-correlation_matrix = numeric_data.corr()
-fig, ax = plt.subplots(figsize=(10, 8))
-sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', ax=ax)
-ax.set_title("Matrice de corrélation")
-st.pyplot(fig)
-
 st.subheader("Predict your film :")
 imdb_id = st.text_input("IMDB Film ID (ttxxxxx)")
 channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
@@ -156,4 +144,4 @@ if st.button("Predict !") :
   input_data_final = np.hstack([input_data_scaled, input_data_encoded.toarray(), input_data[['Vacances scolaires']].values, genres_encoded, nationalite_encoded])
   st.subheader("Model prediction for your film :")
   prediction = float(model.predict(input_data_final)[0])
-  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion} peut espérer une audience de {round(prediction, 3)} millions de téléspectateurs.")
+  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")

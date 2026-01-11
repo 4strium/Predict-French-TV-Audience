@@ -5,3 +5,6 @@ scikit-learn
 xgboost
 matplotlib
 seaborn
+datetime
+vacances-scolaires-france
+requests

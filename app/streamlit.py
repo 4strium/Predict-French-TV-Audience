@@ -6,8 +6,14 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder, M
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 
-# 1. Charger les données
-data = pd.read_csv("database.csv")
+# Affichage 
+st.title("Audience Prediction")
+
+@st.cache_data
+def load_data():
+  return pd.read_csv("database.csv")
+
+data = load_data()
 
 # 2. Prétraitement
 data['Date de diffusion'] = pd.to_datetime(data['Date de diffusion'])
@@ -68,3 +74,6 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
+
+st.write("Erreur quadratique moyenne :", rmse)
+st.write("R2 Score :",  r2_score(y_test, y_pred))

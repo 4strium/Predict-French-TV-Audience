@@ -2,9 +2,9 @@ import pandas
 import unidecode
 import re
 
-df_data = pandas.read_csv('database_fine.csv')
-df_title = pandas.read_csv('akas_fr.csv')
-df_ratings = pandas.read_csv('title.ratings.tsv', sep='\t')
+df_data = pandas.read_csv('clean-process/database_2024_fine.csv')
+df_title = pandas.read_csv('clean-process/akas_fr.csv')
+df_ratings = pandas.read_csv('data-init/title.ratings.tsv', sep='\t')
 
 df_data['TITRE'] = df_data['TITRE'].apply(lambda x: unidecode.unidecode(x).upper())
 df_title['title'] = df_title['title'].apply(lambda x: unidecode.unidecode(x).upper())
@@ -58,4 +58,4 @@ missing_imdb_id_count = df_data['IMDB ID'].isna().sum()
 print(f"Nombre de valeurs vides pour la colonne 'IMDB ID': {missing_imdb_id_count}")
 
 print(df_data.head())
-df_data.to_csv('databse_complete.csv', index=False)
+df_data.to_csv('join-process/database_2024_complete.csv', index=False)

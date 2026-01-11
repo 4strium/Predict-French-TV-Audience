@@ -1,19 +1,26 @@
 import pandas
 import datetime
 
-df = pandas.read_csv('database.csv',sep=";")
+df = pandas.read_csv('clean-process/database2024.csv',sep=";")
 
 # Prétraitement :
 df.iloc[:, -2:] = df.iloc[:, -2:].replace(',', '.', regex=True)
-df['Téléspectateurs (en millions)'] = df['Téléspectateurs (en millions)'].astype(float)
+df['Téléspectateurs (en millions)'] = df['Téléspectateurs'].astype(float)/1000000
 df["Part d'audience (en %)"] = df["Part d'audience (en %)"].astype(float)
-df['Date de diffusion'] = pandas.to_datetime(df['Date de diffusion'], format='%d/%m/%Y')
+df['Date de diffusion'] = pandas.to_datetime(df['Date de diffusion'], format='%d.%m.%Y')
 df['Jour'] = df['Date de diffusion'].dt.day_name()
-df['Nationalité'] = df['Nationalité'].str.replace('DE', 'Allemagne', regex=False)
-df['Nationalité'] = df['Nationalité'].str.replace('CH', 'Suisse', regex=False)
-df['Nationalité'] = df['Nationalité'].str.replace('CA', 'Canada', regex=False)
+# df['Nationalité'] = df['Nationalité'].str.replace('DE', 'Allemagne', regex=False)
+# df['Nationalité'] = df['Nationalité'].str.replace('CH', 'Suisse', regex=False)
+# df['Nationalité'] = df['Nationalité'].str.replace('CA', 'Canada', regex=False)
 
 vacances_scolaires = [
+    # Année 2024
+    (datetime.datetime(2024, 2, 10), datetime.datetime(2024, 2, 26)),  # Vacances d'hiver
+    (datetime.datetime(2024, 4, 13), datetime.datetime(2024, 4, 29)),  # Vacances de printemps
+    (datetime.datetime(2024, 7, 6), datetime.datetime(2024, 9, 2)),   # Vacances d'été
+    (datetime.datetime(2024, 10, 19), datetime.datetime(2024, 11, 4)), # Vacances de la Toussaint
+    (datetime.datetime(2024, 12, 21), datetime.datetime(2025, 1, 6)),  # Vacances de Noël
+    
     # Année 2023
     (datetime.datetime(2023, 2, 4), datetime.datetime(2023, 2, 20)),  # Vacances d'hiver
     (datetime.datetime(2023, 4, 8), datetime.datetime(2023, 4, 24)),  # Vacances de printemps
@@ -198,4 +205,4 @@ def est_vacances(date):
 
 df['Vacances scolaires'] = df['Date de diffusion'].apply(est_vacances)
 
-df.to_csv('database_fine.csv', index=False)
+df.to_csv('clean-process/database_2024_fine.csv', index=False)

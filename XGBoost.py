@@ -101,9 +101,9 @@ plt.title("Importance des caractéristiques")
 plt.bar(range(len(importances)), importances[indices], align="center")
 plt.xticks(range(len(importances)), feature_names[indices], rotation=90)
 plt.tight_layout()
-#plt.show()
+# plt.show()
 
-print(sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True))
+# print(sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True))
 
 # Prédire de nouvelles données
 new_data = pd.DataFrame([

@@ -3,6 +3,5 @@ pandas
 numpy
 scikit-learn
 xgboost
-datetime
 vacances-scolaires-france
 requests

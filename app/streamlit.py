@@ -11,16 +11,15 @@ import requests
 st.title("French TV Audience Prediction")
 
 # ======================================================
-# 1. LOAD DATA (CACHE OK : PAS DE LISTES)
+# 1. LOAD DATA (NO CACHE - LIST COLUMNS PRESENT)
 # ======================================================
-@st.cache_data
 def load_data():
     return pd.read_csv("database.csv")
 
 data = load_data()
 
 # ======================================================
-# 2. PREPROCESSING (HORS CACHE)
+# 2. PREPROCESSING (OUTSIDE CACHE)
 # ======================================================
 data['Date de diffusion'] = pd.to_datetime(data['Date de diffusion'])
 data['Mois'] = data['Date de diffusion'].dt.month
@@ -29,7 +28,7 @@ data['Week-end'] = data['Jour'].isin(['Saturday', 'Sunday']).astype(int)
 data['Saison'] = data['Mois'] % 12 // 3 + 1
 data['Nationalité'] = data['Nationalité'].str.upper()
 
-# Genres / Nationalités → listes (HORS CACHE)
+# Genres / Nationalités → listes (OUTSIDE CACHE)
 data['Genres'] = data['Genres'].str.split(',')
 data['Nationalité'] = data['Nationalité'].apply(
     lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else []
@@ -168,7 +167,15 @@ if submitted and imdb_id:
     )
 
     genres_encoded = mlb_genres.transform([all_data_json['genres']])
-    nat_encoded = mlb_nat.transform([[c.upper() for c in all_data_json['originCountries']]])
+    
+    # Handle originCountries - could be list of strings or dicts
+    origin_countries = all_data_json.get('originCountries', [])
+    if origin_countries and isinstance(origin_countries[0], dict):
+        origin_countries = [c.get('id', '').upper() for c in origin_countries]
+    else:
+        origin_countries = [str(c).upper() for c in origin_countries]
+    
+    nat_encoded = mlb_nat.transform([origin_countries])
 
     X_final = np.hstack([
         X_num,

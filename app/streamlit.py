@@ -6,178 +6,182 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder, M
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 from vacances_scolaires_france import SchoolHolidayDates
-import datetime
 import requests
 
-# Affichage 
 st.title("French TV Audience Prediction")
 
+# ======================================================
+# 1. LOAD DATA (CACHE OK : PAS DE LISTES)
+# ======================================================
 @st.cache_data
 def load_data():
-  return pd.read_csv("database.csv")
+    return pd.read_csv("database.csv")
 
 data = load_data()
 
-# 2. Prétraitement
+# ======================================================
+# 2. PREPROCESSING (HORS CACHE)
+# ======================================================
 data['Date de diffusion'] = pd.to_datetime(data['Date de diffusion'])
 data['Mois'] = data['Date de diffusion'].dt.month
-data['Week-end'] = data['Jour'].isin(['Saturday', 'Sunday']).astype(int)
-data['Saison'] = data['Date de diffusion'].dt.month % 12 // 3 + 1  # 1: hiver, 2: printemps, 3: été, 4: automne
 data['Année de diffusion'] = data['Date de diffusion'].dt.year
+data['Week-end'] = data['Jour'].isin(['Saturday', 'Sunday']).astype(int)
+data['Saison'] = data['Mois'] % 12 // 3 + 1
 data['Nationalité'] = data['Nationalité'].str.upper()
 
-# Séparer les genres par des virgules
-data['Genres'] = data['Genres'].apply(lambda x: x.split(','))
-# Appliquer MultiLabelBinarizer
-mlb = MultiLabelBinarizer()
-genres_encoded = mlb.fit_transform(data['Genres'])
+# Genres / Nationalités → listes (HORS CACHE)
+data['Genres'] = data['Genres'].str.split(',')
+data['Nationalité'] = data['Nationalité'].apply(
+    lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else []
+)
 
-# Créer un DataFrame avec les genres encodés
-genres_df = pd.DataFrame(genres_encoded, columns=mlb.classes_)
+# Encoders multilabel (globaux, pas dans le cache)
+mlb_genres = MultiLabelBinarizer()
+genres_df = pd.DataFrame(
+    mlb_genres.fit_transform(data['Genres']),
+    columns=mlb_genres.classes_
+)
 
-# Séparer les nationalités par des slash
-data['Nationalité'] = data['Nationalité'].apply(lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else [])
+mlb_nat = MultiLabelBinarizer()
+national_df = pd.DataFrame(
+    mlb_nat.fit_transform(data['Nationalité']),
+    columns=mlb_nat.classes_
+)
 
-mlb_nationalite = MultiLabelBinarizer()
-nationalite_encoded = mlb_nationalite.fit_transform(data['Nationalité'])
-
-# Créer un DataFrame avec les nationalités encodées
-national_df = pd.DataFrame(nationalite_encoded, columns=mlb_nationalite.classes_)
-
-# Sélectionner les colonnes nécessaires
-features = ['Chaîne', 'Genres', 'Nationalité', 'Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Jour', 'Mois', 'Année de diffusion', 'Vacances scolaires', 'Week-end', 'Saison']
+features = [
+    'Chaîne', 'Jour', 'Durée (en min.)',
+    'IMDB - Note moyenne', 'IMDB - Nombre de votes',
+    'Année de sortie', 'Année de diffusion',
+    'Mois', 'Week-end', 'Saison', 'Vacances scolaires'
+]
 target = 'Téléspectateurs (en millions)'
 
-X = data[features].copy()
-y = data[target]
-
+# ======================================================
+# 3. TRAINING (CACHE RESOURCE – OK)
+# ======================================================
 @st.cache_resource
-def train_model(data):
-  # preprocessing + entraînement
-  encoder = OneHotEncoder()
-  scaler = StandardScaler()
-  vacances_encoder = LabelEncoder()
+def train_model(data, genres_df, national_df):
+    encoder = OneHotEncoder(handle_unknown="ignore")
+    scaler = StandardScaler()
+    vacances_encoder = LabelEncoder()
 
-  X = data[features].copy()
-  y = data[target]
+    X = data[features].copy()
+    y = data[target]
 
-  X_encoded = encoder.fit_transform(X[['Chaîne', 'Jour']])
-  X_scaled = scaler.fit_transform(X[['Durée (en min.)',
-                                      'IMDB - Note moyenne',
-                                      'IMDB - Nombre de votes',
-                                      'Année de sortie',
-                                      'Année de diffusion',
-                                      'Mois',
-                                      'Week-end',
-                                      'Saison']])
+    X_cat = encoder.fit_transform(X[['Chaîne', 'Jour']])
+    X_num = scaler.fit_transform(X[
+        ['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes',
+         'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']
+    ])
 
-  X['Vacances scolaires'] = vacances_encoder.fit_transform(X['Vacances scolaires'])
+    X['Vacances scolaires'] = vacances_encoder.fit_transform(X['Vacances scolaires'])
 
-  X_final = np.hstack([
-      X_scaled,
-      X_encoded.toarray(),
-      X[['Vacances scolaires']].values,
-      genres_df.values,
-      national_df.values
-  ])
+    X_final = np.hstack([
+        X_num,
+        X_cat.toarray(),
+        X[['Vacances scolaires']].values,
+        genres_df.values,
+        national_df.values
+    ])
 
-  X_train, X_test, y_train, y_test = train_test_split(
-      X_final, y, test_size=0.2, random_state=42
-  )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_final, y, test_size=0.2, random_state=42
+    )
 
-  model = xgboost.XGBRegressor(
-      max_depth=3, subsample=0.91, tree_method='hist',
-      seed=42, n_estimators=30, learning_rate=0.32
-  )
-  model.fit(X_train, y_train)
+    model = xgboost.XGBRegressor(
+        max_depth=3,
+        subsample=0.91,
+        tree_method='hist',
+        seed=42,
+        n_estimators=30,
+        learning_rate=0.32
+    )
+    model.fit(X_train, y_train)
 
-  return model, encoder, scaler, vacances_encoder, X_test, y_test
+    return model, encoder, scaler, vacances_encoder, X_test, y_test
+
 
 if "model" not in st.session_state:
-  with st.spinner("🧠 Training model..."):
-    (st.session_state.model,
-      st.session_state.encoder,
-      st.session_state.scaler,
-      st.session_state.vacances_encoder,
-      st.session_state.X_test, st.session_state.y_test) = train_model(data)
-    
-model = st.session_state.model
-encoder = st.session_state.encoder
-scaler = st.session_state.scaler
-vacances_encoder = st.session_state.vacances_encoder
+    with st.spinner("🧠 Training model..."):
+        (st.session_state.model,
+         st.session_state.encoder,
+         st.session_state.scaler,
+         st.session_state.vacances_encoder,
+         st.session_state.X_test,
+         st.session_state.y_test) = train_model(data, genres_df, national_df)
 
-# 5. Évaluer le modèle
+# ======================================================
+# 4. METRICS
+# ======================================================
+model = st.session_state.model
 y_pred = model.predict(st.session_state.X_test)
-mse = mean_squared_error(st.session_state.y_test, y_pred)
-rmse = np.sqrt(mse)
 
 st.subheader("Model infos :")
-st.write("Erreur quadratique moyenne :", rmse)
-st.write("R2 Score :",  r2_score(st.session_state.y_test, y_pred))
+st.write("RMSE :", np.sqrt(mean_squared_error(st.session_state.y_test, y_pred)))
+st.write("R² :", r2_score(st.session_state.y_test, y_pred))
 
+# ======================================================
+# 5. PREDICTION FORM
+# ======================================================
 st.subheader("Predict your film :")
+
 with st.form("prediction_form"):
-  imdb_id = st.text_input("IMDB Film ID (ttxxxxx)", max_chars=14)
-  channel = st.selectbox("Channel", ["TF1", "France 2", "France 3", "France 4", "France 5", "M6", "Arte", "C8", "W9", "TMC", "TFX", "TF1 Séries Films", "6ter", "Gulli", "Canal +", "C Star", "NRJ12", "Chérie 25"])
-  date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
+    imdb_id = st.text_input("IMDB Film ID (ttxxxxx)")
+    channel = st.selectbox("Channel", [
+        "TF1", "France 2", "France 3", "France 4", "France 5",
+        "M6", "Arte", "C8", "W9", "TMC", "TFX",
+        "TF1 Séries Films", "6ter", "Gulli",
+        "Canal +", "C Star", "NRJ12", "Chérie 25"
+    ])
+    date_diffusion = st.date_input("Broadcast date", format="DD/MM/YYYY")
+    submitted = st.form_submit_button("Predict !")
 
-  submitted = st.form_submit_button("Predict !")
+# ======================================================
+# 6. INFERENCE
+# ======================================================
+if submitted and imdb_id:
+    all_data_json = requests.get(
+        f"https://api.imdbapi.dev/titles/{imdb_id}"
+    ).json()
 
-# Prédire avec le modèle
-if submitted:
-  akas_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}/akas").json()
-  title_france = next((aka["text"] for aka in akas_json["akas"] if aka["country"]["code"] == "FR"), None)
+    input_data = pd.DataFrame([{
+        'Chaîne': channel,
+        'Jour': pd.Timestamp(date_diffusion).day_name(),
+        'Durée (en min.)': all_data_json['runtimeSeconds'] // 60,
+        'IMDB - Note moyenne': float(all_data_json['rating']['aggregateRating']),
+        'IMDB - Nombre de votes': int(all_data_json['rating']['voteCount']),
+        'Année de sortie': int(all_data_json['startYear']),
+        'Année de diffusion': date_diffusion.year,
+        'Mois': date_diffusion.month,
+        'Week-end': int(pd.Timestamp(date_diffusion).day_name() in ['Saturday', 'Sunday']),
+        'Saison': date_diffusion.month % 12 // 3 + 1,
+        'Vacances scolaires': 'oui' if SchoolHolidayDates().is_holiday(date_diffusion) else 'non'
+    }])
 
-  all_data_json = requests.get(f"https://api.imdbapi.dev/titles/{imdb_id}").json()
-  runtime_minutes = all_data_json['runtimeSeconds'] // 60
-  country = all_data_json['originCountries'][0]['name']
-  genres = ','.join(all_data_json['genres'])
-  average_rating = all_data_json['rating']['aggregateRating']
-  num_votes = all_data_json['rating']['voteCount']
-  year_release = all_data_json['startYear']
+    X_cat = st.session_state.encoder.transform(input_data[['Chaîne', 'Jour']])
+    X_num = st.session_state.scaler.transform(input_data[
+        ['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes',
+         'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']
+    ])
+    input_data['Vacances scolaires'] = st.session_state.vacances_encoder.transform(
+        input_data['Vacances scolaires']
+    )
 
-  film_to_predict = {
-    'TITRE' : title_france,
-    'Chaîne': channel,
-    'Genres': genres,
-    'Nationalité': country,
-    'Durée (en min.)': runtime_minutes,
-    'IMDB - Note moyenne': float(average_rating),
-    'IMDB - Nombre de votes': int(num_votes),
-    'Année de sortie': int(year_release),
-    'Année de diffusion': date_diffusion.year,
-    'Jour': pd.Timestamp(date_diffusion).day_name(),
-    'Mois': date_diffusion.month,
-    'Vacances scolaires': 'oui' if SchoolHolidayDates().is_holiday(datetime.date(date_diffusion.year, date_diffusion.month, date_diffusion.day)) else 'non',
-    'Week-end': 1 if pd.Timestamp(date_diffusion).day_name() in ['Saturday', 'Sunday'] else 0,
-    'Saison': (date_diffusion.month % 12 // 3 + 1)
-  }
+    genres_encoded = mlb_genres.transform([all_data_json['genres']])
+    nat_encoded = mlb_nat.transform([[c.upper() for c in all_data_json['originCountries']]])
 
-  input_data = pd.DataFrame([film_to_predict])
-  # Séparer les genres pour appliquer l'encodage MultiLabelBinarizer
-  input_data['Genres'] = input_data['Genres'].apply(lambda x: x.split(','))
+    X_final = np.hstack([
+        X_num,
+        X_cat.toarray(),
+        input_data[['Vacances scolaires']].values,
+        genres_encoded,
+        nat_encoded
+    ])
 
-  # Séparer les nationalités par des slash
-  input_data['Nationalité'] = input_data['Nationalité'].apply(lambda x: [i.strip() for i in x.split('/')] if isinstance(x, str) else [])
+    prediction = model.predict(X_final)[0]
 
-  # Encoder les nouvelles données
-  input_data_encoded = encoder.transform(input_data[['Chaîne', 'Jour']])
-  input_data['Vacances scolaires'] = vacances_encoder.transform(input_data['Vacances scolaires'])
-
-  # Normaliser les données numériques
-  input_data_scaled = scaler.transform(input_data[['Durée (en min.)', 'IMDB - Note moyenne', 'IMDB - Nombre de votes', 'Année de sortie', 'Année de diffusion', 'Mois', 'Week-end', 'Saison']])
-
-  # Encoder les genres avec MultiLabelBinarizer
-  genres_encoded = mlb.transform(input_data['Genres'])
-
-  # Encoder les nationalités
-  nationalite_encoded = mlb_nationalite.transform(input_data['Nationalité'])
-
-  # Combiner toutes les features des nouvelles données
-  input_data_final = np.hstack([input_data_scaled, input_data_encoded.toarray(), input_data[['Vacances scolaires']].values, genres_encoded, nationalite_encoded])
-  st.subheader("Model prediction for your film :")
-  left_co, cent_co, last_co = st.columns(3)
-  with cent_co:
-    st.image(all_data_json['primaryImage']['url'], width=150)
-  prediction = float(model.predict(input_data_final)[0])
-  st.write(f"Le film {film_to_predict['TITRE']} diffusé sur {film_to_predict['Chaîne']}, le {date_diffusion.strftime('%d/%m/%Y')} peut espérer une audience de **{round(prediction, 3)} millions** de téléspectateurs.")
+    st.subheader("Prediction")
+    left_co, cent_co,last_co = st.columns(3)
+    with cent_co:
+      st.image(all_data_json['primaryImage']['url'], width=200)
+    st.success(f"Audience estimée : **{prediction:.3f} millions**")
